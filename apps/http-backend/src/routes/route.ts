@@ -1,55 +1,61 @@
-import  express ,{Router} from "express";
+import express, { Router } from "express";
 import jwt from "jsonwebtoken"
-export const userrouter :Router=express.Router();
-import {z} from 'zod';
+export const userrouter: Router = express.Router();
+import { z } from 'zod';
 import bcrypt from "bcrypt";
 import { middleware } from "./middleware";
-export const jwt_secret ="raviraj124"
-userrouter.post("/signup", async (req,res)=>{
-    const {email, password} =req.body;
-    const userschema = z.object({
-        email:z.string,
-        password:z.string
-    })
-    const hashedpass=bcrypt.hash(password,20)
+import { jwt_secret } from "@repo/backend-common/config";
+import {createuserschema} from :"@repo/common/types"
+
+userrouter.post("/signup", async (req, res) => {
+
+   
 
 
+    const { email, password, name } = req.body;
 
-    const user = await usermodel.create({
-        email,
-        password
-    })
+    const parsing = createuserschema.safeParse(req.body);
 
-  
+    const hashedpass = await bcrypt.hash(password, 20);
+    console.log(hashedpass);
 
-    if(!user){
+    if (hashedpass) {
+
+        //db call
+    } else {
         res.json({
-            message:"token authentication failed "
+            message: "singup failed "
         })
     }
-    res.json({
-    message:"this is the signup route"
-    })
-    })
-}
 
 
-userrouter.post("/signin",async (req,res)=>{
-  
-  const {email,password}= req.body;
-
-  const user =usermodel.findOne({
-    email
-  })
 
 
-  const pasmatch =await bcrypt.compare(hashedpass,user.password )
-
- if(user){
 
 
-        const token = jwt.sign({
-            id:user._Id
+
+
+
+
+})
+
+
+userrouter.post("/signin", async (req, res) => {
+
+    const { email, password } = req.body;
+
+  //  const user = await usermodel.findOne({
+        email:email
+ //   })
+
+
+  //  const pasmatch = await bcrypt.compare(password, user.password)
+
+    if (pasmatch) {
+
+
+       const  token = jwt.sign({
+            id: user._Id.toString()
         }, jwt_secret)
 
 
@@ -58,12 +64,10 @@ userrouter.post("/signin",async (req,res)=>{
         }
         )
     }
-  
+
 }
 )
 
-userrouter.post("/createroom", middleware, (req,res)=>{
-    res.json({
-        message:"this is the create room routes "
-    })
+userrouter.post("/room",middleware, (req,res)=>{
+    
 })
