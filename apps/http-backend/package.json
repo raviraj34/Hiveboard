@@ -19,7 +19,8 @@
     "jsonwebtoken": "^9.0.2",
     "zod": "^4.1.8",
     "@repo/backend-common":"workspace:*",
-    "@repo/common":"wrokspace:*"
+    "@repo/common":"workspace:*",
+    "@repo/database":"workspace:*"
   },
   "keywords": [],
   "author": "",
