@@ -5,7 +5,7 @@ import { z } from 'zod';
 import bcrypt from "bcrypt";
 import { middleware } from "./middleware";
 import { jwt_secret } from "@repo/backend-common/config";
-import {createuserschema} from "@repo/common/types"
+import {createroomschema, createuserschema, signinschema} from "@repo/common/types"
 import { prisma } from "@repo/database/client";
 userrouter.post("/signup", async (req, res) => {
 
@@ -32,7 +32,7 @@ try{
 
 
     if (hashedpass) {
-    await prisma.user.create({
+  const user=  await prisma.user.create({
          data:{
              email:parsing.data?.email!,
              password:parsing.data?.password!,
@@ -40,6 +40,9 @@ try{
          
          }
      })
+            res.json({
+                userId:user.id
+            })
      
       } else {
           res.json({
@@ -61,10 +64,10 @@ try{
 })
 
 
-userrouter.post("/signin",middleware, async (req, res) => {
+userrouter.post("/signin", async (req, res) => {
 
   const { email, password } = req.body;
-const parsed = createuserschema.safeParse(req.body)
+const parsed = signinschema.safeParse(req.body)
 
  
 const user = await prisma.user.findFirst({
@@ -74,15 +77,25 @@ const user = await prisma.user.findFirst({
     }
 })
 
+            if(!user){
+                res.json({
+                    message:"user not found"
+                })
+            }
 
 
 
     if (user) {
 
 
-        const  token = jwt.sign({
-             userId: user?.id
-         }, jwt_secret)
+       const token = jwt.sign(
+             { userId: user?.id },
+            jwt_secret,
+            { expiresIn: "1h" }
+        );
+        
+        console.log("Token generated:", token, "with secret:", jwt_secret);
+        console.log(token);
 
 
          res.json({
@@ -96,26 +109,39 @@ const user = await prisma.user.findFirst({
 
  userrouter.post("/room",middleware, async (req,res)=>{
    
-   const parsedata = createuserschema.safeParse(req.body);
+   const parsedata = createroomschema.safeParse(req.body);
 
    if(!parsedata.success){
     res.json({
         message:"invalid inputs"
     })
+    return;
    }
   //@ts-ignore
    const userId= req.userId
-   await prisma.room.create({
-    data:{
-        slug:parsedata.data?.name!,
-        adminId:userId
-    }
-   })
-   
-   
-   
-   
-    res.json({
-         roomId:"123"
+
+   try{
+
+       const room= await prisma.room.create({
+        data:{
+            slug:parsedata.data?.name!,
+            adminId:userId
+        }
+       })
+
+
+          res.json({
+         roomId:room.id
      })
+     
+   }catch(e){
+    res.json({
+        message:"slug already exist"
+    })
+   }
+   
+   
+   
+   
+ 
  })
