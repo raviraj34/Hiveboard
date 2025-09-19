@@ -5,11 +5,11 @@ import { z } from 'zod';
 import bcrypt from "bcrypt";
 import { middleware } from "./middleware";
 import { jwt_secret } from "@repo/backend-common/config";
-import {createroomschema, createuserschema, signinschema} from "@repo/common/types"
+import { createroomschema, createuserschema, signinschema } from "@repo/common/types"
 import { prisma } from "@repo/database/client";
 userrouter.post("/signup", async (req, res) => {
 
-   
+
 
 
     const { email, password, name } = req.body;
@@ -19,45 +19,45 @@ userrouter.post("/signup", async (req, res) => {
     const hashedpass = await bcrypt.hash(password, 20);
     console.log(hashedpass);
 
-    if(!parsing.success){
+    if (!parsing.success) {
         res.json({
-            message:"invalid inputs"
+            message: "invalid inputs"
         })
     }
 
-if (!req.body.email) {
-  throw new Error("Email is required");
-}
-try{
+    if (!req.body.email) {
+        throw new Error("Email is required");
+    }
+    try {
 
 
-    if (hashedpass) {
-  const user=  await prisma.user.create({
-         data:{
-             email:parsing.data?.email!,
-             password:parsing.data?.password!,
-             name:parsing.data?.name!,
-         
-         }
-     })
-            res.json({
-                userId:user.id
+        if (hashedpass) {
+            const user = await prisma.user.create({
+                data: {
+                    email: parsing.data?.email!,
+                    password: parsing.data?.password!,
+                    name: parsing.data?.name!,
+
+                }
             })
-     
-      } else {
-          res.json({
-              message: "singup failed "
-          })
-      }
+            res.json({
+                userId: user.id
+            })
 
-
-}catch(e){
-    res.json(
-        {
-            message:"user already exist in the database"
+        } else {
+            res.json({
+                message: "singup failed "
+            })
         }
-    )
-}
+
+
+    } catch (e) {
+        res.json(
+            {
+                message: "user already exist in the database"
+            }
+        )
+    }
 
 
 
@@ -66,82 +66,100 @@ try{
 
 userrouter.post("/signin", async (req, res) => {
 
-  const { email, password } = req.body;
-const parsed = signinschema.safeParse(req.body)
+    const { email, password } = req.body;
+    const parsed = signinschema.safeParse(req.body)
 
- 
-const user = await prisma.user.findFirst({
-    where:{
-        email:parsed.data?.email,
-        password:parsed.data?.password
+
+    const user = await prisma.user.findFirst({
+        where: {
+            email: parsed.data?.email,
+            password: parsed.data?.password
+        }
+    })
+
+    if (!user) {
+        res.json({
+            message: "user not found"
+        })
     }
-})
-
-            if(!user){
-                res.json({
-                    message:"user not found"
-                })
-            }
 
 
 
     if (user) {
 
 
-       const token = jwt.sign(
-             { userId: user?.id },
+        const token = jwt.sign(
+            { userId: user?.id },
             jwt_secret,
             { expiresIn: "1h" }
         );
-        
+
         console.log("Token generated:", token, "with secret:", jwt_secret);
         console.log(token);
 
 
-         res.json({
-             token
-         }
-         )
-     }
+        res.json({
+            token
+        }
+        )
+    }
 
- }
+}
 )
 
- userrouter.post("/room",middleware, async (req,res)=>{
-   
-   const parsedata = createroomschema.safeParse(req.body);
+userrouter.post("/room", middleware, async (req, res) => {
 
-   if(!parsedata.success){
+    const parsedata = createroomschema.safeParse(req.body);
+
+    if (!parsedata.success) {
+        res.json({
+            message: "invalid inputs"
+        })
+        return;
+    }
+    //@ts-ignore
+    const userId = req.userId
+
+    try {
+
+        const room = await prisma.room.create({
+            data: {
+                slug: parsedata.data?.name!,
+                adminId: userId
+            }
+        })
+
+
+        res.json({
+            roomId: room.id
+        })
+
+    } catch (e) {
+        res.json({
+            message: "slug already exist"
+        })
+    }
+
+
+
+
+
+})
+
+
+userrouter.get("/chats/:roomId", async (req,res)=>{
+    const roomId = Number(req.params.roomId);
+    const messages = await prisma.chat.findMany({
+        where:{
+            roomId: roomId
+        },
+        orderBy:{
+            id:"desc"
+        },
+        take: 50
+    });
+
     res.json({
-        message:"invalid inputs"
+        messages
     })
-    return;
-   }
-  //@ts-ignore
-   const userId= req.userId
-
-   try{
-
-       const room= await prisma.room.create({
-        data:{
-            slug:parsedata.data?.name!,
-            adminId:userId
-        }
-       })
-
-
-          res.json({
-         roomId:room.id
-     })
-     
-   }catch(e){
-    res.json({
-        message:"slug already exist"
-    })
-   }
-   
-   
-   
-   
- 
- })
+})
