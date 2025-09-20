@@ -7,8 +7,8 @@ export function ChatRoomClient({
     messages,
     id
 }:{
-    messages: {message: String}[];
-    id: String
+    messages: {message: string}[];
+    id: string
 }
 ){
     const [chats ,setchats] = useState(messages);
