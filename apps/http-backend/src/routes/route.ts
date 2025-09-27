@@ -10,8 +10,6 @@ import { prisma } from "@repo/database/client";
 userrouter.post("/signup", async (req, res) => {
 
 
-
-
     const { email, password, name } = req.body;
 
     const parsing = createuserschema.safeParse(req.body);
@@ -83,16 +81,11 @@ userrouter.post("/signin", async (req, res) => {
         })
     }
 
-
-
     if (user) {
-
 
         const token = jwt.sign(
             { userId: user?.id },
-            jwt_secret,
-            { expiresIn: "1h" }
-        );
+             jwt_secret  );
 
         console.log("Token generated:", token, "with secret:", jwt_secret);
         console.log(token);
@@ -141,11 +134,7 @@ userrouter.post("/room", middleware, async (req, res) => {
     }
 
 
-
-
-
 })
-
 
 userrouter.get("/chats/:roomId", async (req,res)=>{
  try{
@@ -160,7 +149,7 @@ userrouter.get("/chats/:roomId", async (req,res)=>{
          orderBy:{
              id:"desc"
          },
-         take: 50
+         take: 500
      });
     
      res.json({
@@ -177,8 +166,6 @@ userrouter.get("/chats/:roomId", async (req,res)=>{
  }
  
 })
-
-
 
 
 userrouter.get("/room/:slug",async (req,res)=>{

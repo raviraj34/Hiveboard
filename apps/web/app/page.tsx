@@ -20,7 +20,7 @@ export default function Home(){
       }} placeholder="enter roomId"/>
 
       <button onClick={()=>{
-        router.push(`/backend/room/${roomId}`)
+        router.push(`/backend/chats/${roomId}`)
       }}>join room</button>
     </div>
 

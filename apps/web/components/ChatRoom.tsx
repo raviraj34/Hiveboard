@@ -11,7 +11,7 @@ async function getChats(roomId :string){
 
 
 
-export async function ChatRoom({id}:{
+export default async function ChatRoom({id}:{
     id: string
 }){
     const message = await getChats(id);
